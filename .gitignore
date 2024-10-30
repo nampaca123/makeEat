@@ -1,2 +1,6 @@
-node_modules
+# Ignore environment and dependency files
 .anima
+.env
+
+# Ignore all node_modules
+node_modules
