@@ -2,7 +2,35 @@
 
 export default {
     base: "/api",
-    board: {
-        base: "/board"
+    auth: {
+        base: "/auth",
+        register: "/register",
+        login: "/login",
+        logout: "/logout",
+        validateToken: "/validate-token"
+    },
+    recipe: {
+        base: "/recipe",
+        generate: "/generate",
+        save: "/save",
+        saved: "/saved",
+        feedback: "/feedback",
+        search: "/search",
+        details: "/:recipeId"
+    },
+    mealPlan: {
+        base: "/meal-plan",
+        create: "/create",
+        get: "/:mealPlanId",
+        update: "/:mealPlanId",
+        delete: "/:mealPlanId",
+        weekly: "/weekly",
+        suggestions: "/suggestions"
+    },
+    user: {
+        base: "/user",
+        preferences: "/preferences",
+        profile: "/profile",
+        history: "/cooking-history"
     }
 };

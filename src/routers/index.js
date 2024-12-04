@@ -1,9 +1,13 @@
 import { Router } from "express";
 import paths from "../common/paths.js"
-import boardRoutes from "./boardRoutes.js"
+import authRoutes from "./authRoutes.js"
+import recipeRoutes from "./recipeRoutes.js"
+import mealPlanRoutes from "./mealPlanRoutes.js"
 
 const apiRouter = Router();
 
-apiRouter.use(paths.board.base, boardRoutes);
+apiRouter.use(paths.auth.base, authRoutes);
+apiRouter.use(paths.recipe.base, recipeRoutes);
+apiRouter.use(paths.mealPlan.base, mealPlanRoutes);
 
 export default apiRouter;

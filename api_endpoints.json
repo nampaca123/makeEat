@@ -1,0 +1,100 @@
+{
+    "register": {
+      "username": "string",
+      "email": "string",
+      "password": "string",
+      "preferences": {
+        "dietary_restrictions": ["string"],
+        "cuisine_types": ["string"]
+      }
+    },
+    "login": {
+      "email": "string",
+      "password": "string"
+    },
+    "logout": {
+      "user_id": "string",
+      "session_token": "string"
+    },
+    "generate_recipe": {
+      "user_id": "string",
+      "session_token": "string",
+      "meal_type": "string",
+      "cuisine_type": "string",
+      "dietary_restrictions": ["string"],
+      "allergies": ["string"],
+      "servings": "integer",
+      "calorie_limit": "integer",
+      "ingredients": ["string"],
+      "additional_preferences": {
+        "cooking_time": "string",
+        "skill_level": "string"
+      }
+    },
+    "save_recipe": {
+      "user_id": "string",
+      "session_token": "string",
+      "recipe_id": "string"
+    },
+    "get_saved_recipes": {
+      "user_id": "string",
+      "session_token": "string"
+    },
+    "submit_feedback": {
+      "user_id": "string",
+      "session_token": "string",
+      "recipe_id": "string",
+      "rating": "float",
+      "comments": "string",
+      "issues": ["string"]
+    },
+    "create_meal_plan": {
+      "user_id": "string",
+      "session_token": "string",
+      "start_date": "string (YYYY-MM-DD)",
+      "end_date": "string (YYYY-MM-DD)",
+      "preferences": {
+        "dietary_restrictions": ["string"],
+        "cuisine_types": ["string"],
+        "calorie_limit_per_day": "integer",
+        "meals_per_day": "integer"
+      },
+      "exclude_ingredients": ["string"],
+      "include_recipes": ["recipe_id"]
+    },
+    "get_meal_plan": {
+      "user_id": "string",
+      "session_token": "string",
+      "meal_plan_id": "string"
+    },
+    "update_meal_plan": {
+      "user_id": "string",
+      "session_token": "string",
+      "meal_plan_id": "string",
+      "updates": {
+        "start_date": "string (YYYY-MM-DD)",
+        "end_date": "string (YYYY-MM-DD)",
+        "preferences": {
+          "dietary_restrictions": ["string"],
+          "cuisine_types": ["string"],
+          "calorie_limit_per_day": "integer",
+          "meals_per_day": "integer"
+        },
+        "exclude_ingredients": ["string"],
+        "include_recipes": ["recipe_id"]
+      }
+    },
+    "delete_meal_plan": {
+      "user_id": "string",
+      "session_token": "string",
+      "meal_plan_id": "string"
+    },
+    "error_response": {
+      "success": false,
+      "error": {
+        "code": "string",
+        "message": "string"
+      }
+    }
+  }
+  
