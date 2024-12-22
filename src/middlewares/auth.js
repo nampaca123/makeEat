@@ -15,10 +15,22 @@ export const authenticateUser = async (req, res, next) => {
             });
         }
 
-        const idToken = authHeader.split('Bearer ')[1];
-        const decodedToken = await admin.auth().verifyIdToken(idToken);
+        const token = authHeader.split('Bearer ')[1];
+        let decodedToken;
         
-        // Add user info to request object
+        try {
+            // ID 토큰 검증 시도
+            decodedToken = await admin.auth().verifyIdToken(token);
+        } catch (error) {
+            // ID 토큰 검증 실패 시 customToken으로 시도
+            const userInfo = await admin.auth().verifySessionCookie(token, true);
+            decodedToken = {
+                uid: userInfo.sub,
+                email: userInfo.email,
+                email_verified: userInfo.email_verified
+            };
+        }
+        
         req.user = {
             uid: decodedToken.uid,
             email: decodedToken.email,

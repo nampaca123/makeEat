@@ -1,0 +1,96 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String     @id // Firebase의 uid를 사용할 예정
+  email         String     @unique
+  username      String
+  preferences   Json?      // dietary_restrictions, cuisine_types 등을 JSON으로 저장
+  recipes       Recipe[]   // 사용자가 저장한 레시피들
+  mealPlans     MealPlan[]
+  feedbacks     Feedback[]
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+}
+
+model Recipe {
+  id                  String     @id @default(cuid())
+  title               String
+  description         String?
+  mealType           String     // breakfast, lunch, dinner 등
+  cuisineType        String?
+  dietaryRestrictions String[]
+  allergies          String[]
+  servings           Int
+  calorieLimit       Int?
+  ingredients        String[]
+  instructions       Json       // 조리 단계를 JSON으로 저장
+  cookingTime        String?    // "30분", "1시간" 등
+  skillLevel         String?    // "초급", "중급", "고급" 등
+  
+  // 관계
+  userId             String
+  user               User       @relation(fields: [userId], references: [id])
+  mealPlans          MealPlanRecipe[]
+  feedbacks          Feedback[]
+  
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+}
+
+model MealPlan {
+  id                  String     @id @default(cuid())
+  startDate           DateTime
+  endDate            DateTime
+  preferences        Json?      // dietary_restrictions, cuisine_types, calorie_limit_per_day, meals_per_day
+  excludeIngredients String[]
+  
+  // 관계
+  userId             String
+  user               User       @relation(fields: [userId], references: [id])
+  recipes            MealPlanRecipe[]
+  
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+}
+
+// 다대다 관계를 위한 중간 테이블
+model MealPlanRecipe {
+  mealPlan           MealPlan  @relation(fields: [mealPlanId], references: [id])
+  mealPlanId         String
+  recipe             Recipe    @relation(fields: [recipeId], references: [id])
+  recipeId           String
+  scheduledFor       DateTime  // 식사 예정 시간
+
+  @@id([mealPlanId, recipeId])
+}
+
+model Feedback {
+  id        String   @id @default(cuid())
+  rating    Float    // api_endpoints.json에서는 float로 지정됨
+  comments  String?
+  issues    String[]
+  
+  // 관계
+  recipeId  String
+  recipe    Recipe   @relation(fields: [recipeId], references: [id])
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, recipeId]) // 한 사용자가 같은 레시피에 대해 하나의 피드백만 작성 가능
+}

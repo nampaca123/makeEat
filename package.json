@@ -20,13 +20,15 @@
   },
   "homepage": "https://github.com/nampaca123/makeEat_backend#",
   "dependencies": {
+    "@prisma/client": "^6.1.0",
     "cookie-parser": "^1.4.7",
     "dotenv": "^16.4.5",
     "express": "^4.21.1",
     "firebase": "^11.0.2",
     "firebase-admin": "^11.11.0",
     "jet-logger": "^2.0.1",
-    "morgan": "^1.10.0"
+    "morgan": "^1.10.0",
+    "openai": "^4.77.0"
   },
   "devDependencies": {
     "@babel/core": "^7.26.0",
@@ -34,6 +36,7 @@
     "@babel/preset-env": "^7.26.0",
     "@types/express": "^5.0.0",
     "@types/morgan": "^1.9.9",
-    "nodemon": "^3.1.7"
+    "nodemon": "^3.1.7",
+    "prisma": "^6.1.0"
   }
 }

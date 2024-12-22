@@ -6,21 +6,21 @@ export const authController = {
         try {
             const { email, password, username, preferences } = req.body;
 
-            // Create user in Firebase
+            // 파이어베이스에 사용자 생성
             const userRecord = await admin.auth().createUser({
                 email,
                 password,
                 displayName: username
             });
 
-            // Set custom claims for user preferences
+            // 사용자 선호 설정
             await admin.auth().setCustomUserClaims(userRecord.uid, {
                 preferences
             });
 
             logInfo(`New user registered: ${userRecord.uid}`);
 
-            // Create custom token for initial sign-in
+            // 초기 로그인을 위한 사용자 토큰 생성
             const customToken = await admin.auth().createCustomToken(userRecord.uid);
 
             return res.status(201).json({
@@ -48,10 +48,10 @@ export const authController = {
         try {
             const { idToken } = req.body;
 
-            // Verify the ID token
+            // ID 토큰 검증
             const decodedToken = await admin.auth().verifyIdToken(idToken);
             
-            // Get user details
+            // 사용자 세부 정보 조회
             const userRecord = await admin.auth().getUser(decodedToken.uid);
 
             logInfo(`User logged in: ${userRecord.uid}`);
@@ -79,8 +79,7 @@ export const authController = {
 
     logout: async (req, res) => {
         try {
-            // Firebase handles token invalidation on the client side
-            // Here we just clear any server-side session data if needed
+            // 서버 측 세션 데이터 삭제
             
             logInfo(`User logged out: ${req.user.uid}`);
 

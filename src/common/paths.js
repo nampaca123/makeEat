@@ -26,11 +26,5 @@ export default {
         delete: "/:mealPlanId",
         weekly: "/weekly",
         suggestions: "/suggestions"
-    },
-    user: {
-        base: "/user",
-        preferences: "/preferences",
-        profile: "/profile",
-        history: "/cooking-history"
     }
 };

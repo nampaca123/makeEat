@@ -1,4 +1,5 @@
 import { logError, logInfo } from '../middlewares/logger.js';
+import prisma from '../config/prisma.js';
 
 export const mealPlanController = {
     createMealPlan: async (req, res) => {
@@ -13,20 +14,34 @@ export const mealPlanController = {
 
             logInfo(`Creating meal plan for user: ${req.user.uid}`);
 
-            // TODO: Implement meal plan generation logic
-            // 1. Validate dates
-            // 2. Check user preferences
-            // 3. Generate meal plan using OpenAI
-            // 4. Store in database
+            const mealPlan = await prisma.mealPlan.create({
+                data: {
+                    startDate: new Date(start_date),
+                    endDate: new Date(end_date),
+                    preferences,
+                    excludeIngredients: exclude_ingredients,
+                    userId: req.user.uid,
+                    recipes: {
+                        create: include_recipes?.map(recipeId => ({
+                            recipe: {
+                                connect: { id: recipeId }
+                            },
+                            scheduledFor: new Date(start_date) // 기본값으로 시작일 설정
+                        }))
+                    }
+                },
+                include: {
+                    recipes: {
+                        include: {
+                            recipe: true
+                        }
+                    }
+                }
+            });
 
             return res.status(201).json({
                 success: true,
-                data: {
-                    meal_plan_id: 'generated_meal_plan_id',
-                    start_date,
-                    end_date,
-                    // Additional meal plan details will be added here
-                }
+                data: mealPlan
             });
         } catch (error) {
             logError(`Meal plan creation error: ${error.message}`);
@@ -46,14 +61,33 @@ export const mealPlanController = {
             
             logInfo(`Fetching meal plan ${mealPlanId} for user: ${req.user.uid}`);
 
-            // TODO: Implement database retrieval
+            const mealPlan = await prisma.mealPlan.findUnique({
+                where: {
+                    id: mealPlanId,
+                    userId: req.user.uid // 자신의 식단만 조회 가능
+                },
+                include: {
+                    recipes: {
+                        include: {
+                            recipe: true
+                        }
+                    }
+                }
+            });
+
+            if (!mealPlan) {
+                return res.status(404).json({
+                    success: false,
+                    error: {
+                        code: 'MEAL_PLAN_NOT_FOUND',
+                        message: 'Meal plan not found'
+                    }
+                });
+            }
 
             return res.status(200).json({
                 success: true,
-                data: {
-                    meal_plan_id: mealPlanId,
-                    // Meal plan details will be added here
-                }
+                data: mealPlan
             });
         } catch (error) {
             logError(`Meal plan fetch error: ${error.message}`);
@@ -67,24 +101,131 @@ export const mealPlanController = {
         }
     },
 
-    updateMealPlan: async (req, res) => {
+    getWeeklyPlan: async (req, res) => {
         try {
-            const { mealPlanId } = req.params;
-            const { updates } = req.body;
+            const { date } = req.query; // 특정 주의 시작일
+            const startDate = date ? new Date(date) : new Date();
+            
+            // 주의 시작일과 종료일 계산
+            const endDate = new Date(startDate);
+            endDate.setDate(startDate.getDate() + 7);
 
-            logInfo(`Updating meal plan ${mealPlanId} for user: ${req.user.uid}`);
+            logInfo(`Fetching weekly meal plan for user: ${req.user.uid}`);
 
-            // TODO: Implement update logic
-            // 1. Validate updates
-            // 2. Check permissions
-            // 3. Update in database
+            const weeklyPlan = await prisma.mealPlan.findFirst({
+                where: {
+                    userId: req.user.uid,
+                    startDate: {
+                        gte: startDate
+                    },
+                    endDate: {
+                        lte: endDate
+                    }
+                },
+                include: {
+                    recipes: {
+                        include: {
+                            recipe: true
+                        }
+                    }
+                }
+            });
+
+            return res.status(200).json({
+                success: true,
+                data: weeklyPlan
+            });
+        } catch (error) {
+            logError(`Weekly meal plan fetch error: ${error.message}`);
+            return res.status(500).json({
+                success: false,
+                error: {
+                    code: 'WEEKLY_PLAN_FETCH_ERROR',
+                    message: error.message
+                }
+            });
+        }
+    },
+
+    getSuggestions: async (req, res) => {
+        try {
+            const { preferences } = req.query;
+            
+            logInfo(`Generating meal plan suggestions for user: ${req.user.uid}`);
+
+            // TODO: Implement AI-based meal plan suggestions
+            // This will be implemented when we integrate with OpenAI
+            const suggestions = await prisma.recipe.findMany({
+                where: {
+                    ...(preferences?.cuisineType && { cuisineType: preferences.cuisineType }),
+                    ...(preferences?.mealType && { mealType: preferences.mealType })
+                },
+                take: 7 // 일주일치 추천
+            });
 
             return res.status(200).json({
                 success: true,
                 data: {
-                    meal_plan_id: mealPlanId,
-                    // Updated meal plan details will be added here
+                    suggestions
                 }
+            });
+        } catch (error) {
+            logError(`Meal plan suggestions error: ${error.message}`);
+            return res.status(500).json({
+                success: false,
+                error: {
+                    code: 'SUGGESTIONS_ERROR',
+                    message: error.message
+                }
+            });
+        }
+    },
+
+    updateMealPlan: async (req, res) => {
+        try {
+            const { mealPlanId } = req.params;
+            const {
+                start_date,
+                end_date,
+                preferences,
+                exclude_ingredients,
+                include_recipes
+            } = req.body;
+
+            logInfo(`Updating meal plan ${mealPlanId} for user: ${req.user.uid}`);
+
+            const mealPlan = await prisma.mealPlan.update({
+                where: {
+                    id: mealPlanId,
+                    userId: req.user.uid
+                },
+                data: {
+                    startDate: new Date(start_date),
+                    endDate: new Date(end_date),
+                    preferences,
+                    excludeIngredients: exclude_ingredients,
+                    recipes: {
+                        deleteMany: {},
+                        create: include_recipes?.map(recipeId => ({
+                            recipe: {
+                                connect: { id: recipeId }
+                            },
+                            scheduledFor: new Date(start_date)
+                        }))
+                    }
+                },
+                include: {
+                    recipes: {
+                        include: {
+                            recipe: true
+                        }
+                    }
+                }
+            });
+
+            return res.status(200).json({
+                success: true,
+                data: mealPlan
             });
         } catch (error) {
             logError(`Meal plan update error: ${error.message}`);
@@ -104,9 +245,12 @@ export const mealPlanController = {
 
             logInfo(`Deleting meal plan ${mealPlanId} for user: ${req.user.uid}`);
 
-            // TODO: Implement deletion logic
-            // 1. Check permissions
-            // 2. Remove from database
+            await prisma.mealPlan.delete({
+                where: {
+                    id: mealPlanId,
+                    userId: req.user.uid
+                }
+            });
 
             return res.status(200).json({
                 success: true,
@@ -117,7 +261,7 @@ export const mealPlanController = {
             return res.status(500).json({
                 success: false,
                 error: {
-                    code: 'MEAL_PLAN_DELETE_ERROR',
+                    code: 'MEAL_PLAN_DELETION_ERROR',
                     message: error.message
                 }
             });
