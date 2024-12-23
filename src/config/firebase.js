@@ -4,33 +4,30 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const firebaseConfig = {
-    project_id: process.env.FIREBASE_PROJECT_ID,
-    client_email: process.env.FIREBASE_CLIENT_EMAIL,
-    private_key: process.env.FIREBASE_PRIVATE_KEY,
-};
-
 try {
+    const serviceAccount = {
+        project_id: process.env.FIREBASE_PROJECT_ID,
+        client_email: process.env.FIREBASE_CLIENT_EMAIL,
+        private_key: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n')
+    };
+
+    if (!serviceAccount.project_id || !serviceAccount.client_email || !serviceAccount.private_key) {
+        throw new Error('Missing Firebase configuration');
+    }
+
     logInfo("Firebase Config: {" + 
-        "\n  project_id: '" + firebaseConfig.project_id + "'" +
+        "\n  project_id: '" + serviceAccount.project_id + "'" +
         "\n}"
     );
 
-    const serviceAccount = {
-        project_id: firebaseConfig.project_id,
-        client_email: firebaseConfig.client_email,
-        private_key: firebaseConfig.private_key,
-    };
+    admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount)
+    });
 
     logInfo("Service Account initialized for project: " + serviceAccount.project_id);
 
-    admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount),
-    });
-
 } catch (error) {
-    logError("Firebase initialization error");
-    logError(error.message);
+    logError("Firebase initialization error: " + error.message);
 }
 
 export default admin; 
