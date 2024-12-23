@@ -47,9 +47,9 @@ morgan.token("status", (req, res) => {
 // Morgan 미들웨어 설정
 const morganMW = morgan(morganFormat, {stream});
 
-// 로그 함수 정의
-export const logInfo = (message) => logger.info(message);
-export const logError = (message) => logger.error(message);
-export const logWarn = (message) => logger.warn(message);
+// 로그 함수들을 console로 임시 대체
+export const logInfo = (message) => console.log(message);
+export const logError = (message) => console.error(message);
+export const logWarn = (message) => console.warn(message);
 
 export { logger, morganMW };
