@@ -12,7 +12,8 @@ async function generateInitialRecipe(requirements) {
         - Allergies to avoid: ${requirements.allergies.join(', ')}
         - Servings: ${requirements.servings}
         - Must use these ingredients: ${requirements.ingredients.join(', ')}
-        
+
+        IMPORTANT: Keep your response brief and focused.
         Respond ONLY with a valid JSON object in this exact format:
         {
             "title": "string",
@@ -22,8 +23,10 @@ async function generateInitialRecipe(requirements) {
             "cookingTime": "string",
             "skillLevel": "string"
         }
+        
+        Keep instructions under 5 steps.
         Do not include nutritional information yet.
-        Ensure all required ingredients are included.`;
+        Focus on using the key ingredients effectively.`;
 
     const completion = await openai.chat.completions.create({
         model: "gpt-4",
