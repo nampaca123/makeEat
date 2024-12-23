@@ -49,7 +49,7 @@ const morganMW = morgan(morganFormat, {stream});
 
 // 로그 함수 정의
 export const logInfo = (message) => logger.info(message);
-export const logError = (message) => logger.err(message);
+export const logError = (message) => logger.error(message);
 export const logWarn = (message) => logger.warn(message);
 
 export { logger, morganMW };
