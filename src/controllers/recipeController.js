@@ -66,9 +66,15 @@ async function calculateNutritionFacts(recipe, nutritionInfo) {
                 "calories": "total calories per serving",
                 "protein": "grams per serving",
                 "carbs": "grams per serving",
-                "fat": "grams per serving"
+                "fat": "grams per serving",
+                "fiber": "grams per serving",
+                "sugar": "grams per serving",
+                "sodium": "milligrams per serving"
             }
-        }`;
+        }
+        
+        Keep values numeric only, without units in the response.
+        Round all values to one decimal place.`;
 
     const completion = await openai.chat.completions.create({
         model: "gpt-4",
