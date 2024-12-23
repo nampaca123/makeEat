@@ -39,6 +39,7 @@ model Recipe {
   instructions       Json       // 조리 단계를 JSON으로 저장
   cookingTime        String?    // "30분", "1시간" 등
   skillLevel         String?    // "초급", "중급", "고급" 등
+  nutritionFacts     Json?     // 영양 정보를 JSON으로 저장
   
   // 관계
   userId             String
