@@ -1,6 +1,9 @@
 import { logError, logInfo } from '../middlewares/logger.js';
 import prisma from '../config/prisma.js';
 
+// 테스트용 임시 사용자 ID
+const TEST_USER_ID = "test_user_123";
+
 export const mealPlanController = {
     createMealPlan: async (req, res) => {
         try {
@@ -12,7 +15,7 @@ export const mealPlanController = {
                 include_recipes
             } = req.body;
 
-            logInfo(`Creating meal plan for user: ${req.user.uid}`);
+            logInfo(`Creating meal plan for user: ${TEST_USER_ID}`);
 
             const mealPlan = await prisma.mealPlan.create({
                 data: {
@@ -20,13 +23,13 @@ export const mealPlanController = {
                     endDate: new Date(end_date),
                     preferences,
                     excludeIngredients: exclude_ingredients,
-                    userId: req.user.uid,
+                    userId: TEST_USER_ID,
                     recipes: {
                         create: include_recipes?.map(recipeId => ({
                             recipe: {
                                 connect: { id: recipeId }
                             },
-                            scheduledFor: new Date(start_date) // 기본값으로 시작일 설정
+                            scheduledFor: new Date(start_date)
                         }))
                     }
                 },
@@ -59,12 +62,12 @@ export const mealPlanController = {
         try {
             const { mealPlanId } = req.params;
             
-            logInfo(`Fetching meal plan ${mealPlanId} for user: ${req.user.uid}`);
+            logInfo(`Fetching meal plan ${mealPlanId} for user: ${TEST_USER_ID}`);
 
             const mealPlan = await prisma.mealPlan.findUnique({
                 where: {
                     id: mealPlanId,
-                    userId: req.user.uid // 자신의 식단만 조회 가능
+                    userId: TEST_USER_ID
                 },
                 include: {
                     recipes: {
@@ -110,11 +113,11 @@ export const mealPlanController = {
             const endDate = new Date(startDate);
             endDate.setDate(startDate.getDate() + 7);
 
-            logInfo(`Fetching weekly meal plan for user: ${req.user.uid}`);
+            logInfo(`Fetching weekly meal plan for user: ${TEST_USER_ID}`);
 
             const weeklyPlan = await prisma.mealPlan.findFirst({
                 where: {
-                    userId: req.user.uid,
+                    userId: TEST_USER_ID,
                     startDate: {
                         gte: startDate
                     },
@@ -151,7 +154,7 @@ export const mealPlanController = {
         try {
             const { preferences } = req.query;
             
-            logInfo(`Generating meal plan suggestions for user: ${req.user.uid}`);
+            logInfo(`Generating meal plan suggestions for user: ${TEST_USER_ID}`);
 
             // TODO: Implement AI-based meal plan suggestions
             // This will be implemented when we integrate with OpenAI
@@ -192,12 +195,12 @@ export const mealPlanController = {
                 include_recipes
             } = req.body;
 
-            logInfo(`Updating meal plan ${mealPlanId} for user: ${req.user.uid}`);
+            logInfo(`Updating meal plan ${mealPlanId} for user: ${TEST_USER_ID}`);
 
             const mealPlan = await prisma.mealPlan.update({
                 where: {
                     id: mealPlanId,
-                    userId: req.user.uid
+                    userId: TEST_USER_ID
                 },
                 data: {
                     startDate: new Date(start_date),
@@ -243,12 +246,12 @@ export const mealPlanController = {
         try {
             const { mealPlanId } = req.params;
 
-            logInfo(`Deleting meal plan ${mealPlanId} for user: ${req.user.uid}`);
+            logInfo(`Deleting meal plan ${mealPlanId} for user: ${TEST_USER_ID}`);
 
             await prisma.mealPlan.delete({
                 where: {
                     id: mealPlanId,
-                    userId: req.user.uid
+                    userId: TEST_USER_ID
                 }
             });
 
