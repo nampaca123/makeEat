@@ -13,7 +13,7 @@ async function generateInitialRecipe(requirements) {
         - Servings: ${requirements.servings}
         - Must use these ingredients: ${requirements.ingredients.join(', ')}
 
-        IMPORTANT: Keep your response brief and focused.
+        IMPORTANT: Keep your response brief and focused. Make sure to keep the token length of responses under 8000.
         Respond ONLY with a valid JSON object in this exact format:
         {
             "title": "string",
