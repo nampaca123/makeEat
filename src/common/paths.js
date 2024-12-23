@@ -1,6 +1,6 @@
 // Express 라우터 경로 설정
 
-export default {
+const paths = {
     base: "/api",
     auth: {
         base: "/auth",
@@ -26,5 +26,11 @@ export default {
         delete: "/:mealPlanId",
         weekly: "/weekly",
         suggestions: "/suggestions"
+    },
+    receipt: {
+        base: '/receipt',
+        analyze: '/analyze'
     }
 };
+
+export default paths;

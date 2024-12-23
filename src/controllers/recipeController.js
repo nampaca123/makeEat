@@ -78,7 +78,7 @@ async function calculateNutritionFacts(recipe, nutritionInfo) {
                 "content": prompt
             }
         ],
-        temperature: 0.3  // Lower temperature for more consistent calculations
+        temperature: 0.3
     });
 
     try {
@@ -127,7 +127,7 @@ export const recipeController = {
             // 2. FatSecret API로 영양 정보 조회
             const nutritionInfo = [];
             for (const ingredient of initialRecipe.ingredients) {
-                const [name] = ingredient.split(':');  // "shrimp: 200 grams" -> "shrimp"
+                const [name] = ingredient.split(':');
                 logInfo(`Searching FatSecret for ingredient: ${name}`);
                 const searchResult = await fatSecretService.searchFood(name);
                 logInfo(`FatSecret search response: ${JSON.stringify(searchResult)}`);
