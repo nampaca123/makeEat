@@ -1,5 +1,4 @@
 import morgan from "morgan";
-import logger from "jet-logger";
 
 //ANSI 색상을 로그에 적용하기 위한 함수
 const colorsizeStatus = (status) => {
@@ -15,9 +14,9 @@ const colorsizeStatus = (status) => {
     return `\x1b[37m${status}\x1b[0m`; // 흰색 (기타)
 };
 
-// Morgan이 로그를 Jet-Logger로 보내도록 설정
+// Morgan stream 설정을 console.log로 변경
 const stream = {
-    write: (message) => logger.info(message.trim())
+    write: (message) => console.log(message.trim())
 };
 
 // 환경에 따른 morgan 포맷 설정
@@ -27,29 +26,17 @@ const morganFormat =
         : `:method :url :status :response-time ms - :res[content-length] \nheaders :headers \nquery :query \nbody :body`;
 
 // 커스텀 토큰 설정
-morgan.token("body", (req) => {
-    return JSON.stringify(req.body); // 요청 본문 데이터를 JSON 문자열로 변환
-});
-
-morgan.token("query", (req) => {
-    return JSON.stringify(req.query); // 요청 쿼리 데이터를 JSON 문자열로 변환
-});
-  
-morgan.token("headers", (req) => {
-    return JSON.stringify(req.headers); // 요청 헤더 데이터를 JSON 문자열로 변환
-});
-
-morgan.token("status", (req, res) => {
-    const status = res.statusCode;
-    return colorsizeStatus(status); // 상태 코드에 ANSI 색상 코드 적용
-});
+morgan.token("body", (req) => JSON.stringify(req.body));
+morgan.token("query", (req) => JSON.stringify(req.query));
+morgan.token("headers", (req) => JSON.stringify(req.headers));
+morgan.token("status", (req, res) => colorsizeStatus(res.statusCode));
 
 // Morgan 미들웨어 설정
 const morganMW = morgan(morganFormat, {stream});
 
-// 로그 함수들을 console로 임시 대체
-export const logInfo = (message) => console.log(message);
-export const logError = (message) => console.error(message);
-export const logWarn = (message) => console.warn(message);
+// 로그 함수들을 console로 직접 사용
+export const logInfo = console.log;
+export const logError = console.error;
+export const logWarn = console.warn;
 
-export { logger, morganMW };
+export { morganMW };
