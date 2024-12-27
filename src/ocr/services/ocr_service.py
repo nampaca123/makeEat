@@ -1,67 +1,81 @@
-import torch
-from transformers import TrOCRProcessor, VisionEncoderDecoderModel
 import easyocr
-from PIL import Image
-import io
 import numpy as np
 import cv2
+from PIL import Image
+import io
+import base64
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class OCRService:
     def __init__(self):
-        # CUDA 사용 가능 여부 확인
-        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
-        
-        # EasyOCR 초기화 (CRAFT 기반)
-        self.reader = easyocr.Reader(['ko', 'en'])  # 한국어, 영어 지원
-        
-        # TrOCR 모델 초기화
-        self.processor = TrOCRProcessor.from_pretrained('microsoft/trocr-base-handwritten')
-        self.model = VisionEncoderDecoderModel.from_pretrained('microsoft/trocr-base-handwritten')
-        self.model.to(self.device)
+        self.reader = easyocr.Reader(['en'])
         
     async def process_image(self, image_bytes):
         try:
-            # 이미지 로드 및 전처리
+            # 이미지 로드
             nparr = np.frombuffer(image_bytes, np.uint8)
             image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)  # BGR에서 RGB로 변환
             
-            # EasyOCR로 텍스트 영역 감지
-            results = self.reader.readtext(image)
+            # 이미지 전처리
+            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+            denoised = cv2.fastNlMeansDenoising(gray)
             
-            if not results:
-                return ""
+            # 대비 향상
+            clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+            enhanced = clahe.apply(denoised)
+            
+            # 이진화
+            _, binary = cv2.threshold(enhanced, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+            
+            # EasyOCR로 텍스트 영역만 감지
+            regions = self.reader.readtext(
+                binary,
+                paragraph=False,
+                detail=1,
+                min_size=10,
+                text_threshold=0.2,
+                width_ths=0.7,
+                height_ths=0.7
+            )
+            
+            logger.info(f"Found {len(regions)} text regions")
+            
+            # 원본 이미지 크기의 빈 이미지 생성
+            result = np.full_like(binary, 255)  # 흰색 배경
+            
+            # 감지된 텍스트 영역만 복사
+            for region in regions:
+                bbox = np.array(region[0], np.int32)
+                padding = 5
+                x_min, y_min = bbox.min(axis=0)
+                x_max, y_max = bbox.max(axis=0)
                 
-            texts = []
-            for bbox, text, conf in results:
-                # 텍스트 영역 추출
-                x_min = int(min(pt[0] for pt in bbox))
-                y_min = int(min(pt[1] for pt in bbox))
-                x_max = int(max(pt[0] for pt in bbox))
-                y_max = int(max(pt[1] for pt in bbox))
+                x_min = max(0, int(x_min - padding))
+                y_min = max(0, int(y_min - padding))
+                x_max = min(binary.shape[1], int(x_max + padding))
+                y_max = min(binary.shape[0], int(y_max + padding))
                 
-                # 영역이 유효한지 확인
-                if x_min >= x_max or y_min >= y_max:
-                    continue
-                    
-                cropped_image = image[y_min:y_max, x_min:x_max]
-                if cropped_image.size == 0:
-                    continue
-                    
-                # PIL Image로 변환
-                cropped_pil = Image.fromarray(cropped_image)
-                
-                # TrOCR로 텍스트 인식
-                pixel_values = self.processor(cropped_pil, return_tensors="pt").pixel_values.to(self.device)
-                generated_ids = self.model.generate(pixel_values)
-                trocr_text = self.processor.batch_decode(generated_ids, skip_special_tokens=True)[0]
-                
-                # 신뢰도가 높은 텍스트 선택
-                final_text = trocr_text if len(trocr_text.strip()) > len(text.strip()) else text
-                texts.append(final_text)
-                
-            return "\n".join(text.strip() for text in texts if text.strip())
+                # 원본 영역 복사
+                region_img = binary[y_min:y_max, x_min:x_max]
+                result[y_min:y_max, x_min:x_max] = region_img
+            
+            # PIL Image로 변환
+            result_pil = Image.fromarray(result)
+            
+            # 이미지를 base64로 인코딩
+            img_byte_arr = io.BytesIO()
+            result_pil.save(img_byte_arr, format='PNG')
+            img_byte_arr = img_byte_arr.getvalue()
+            img_base64 = base64.b64encode(img_byte_arr).decode('utf-8')
+            
+            return {
+                "image": img_base64,
+                "regions": len(regions)
+            }
             
         except Exception as e:
-            print(f"Error processing image: {str(e)}")
+            logger.error(f"Error processing image: {str(e)}")
             raise

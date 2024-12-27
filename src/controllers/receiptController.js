@@ -23,8 +23,6 @@ export const receiptController = {
 
             // Tesseract OCR 처리
             const worker = await createWorker();
-            await worker.loadLanguage('eng+kor');
-            await worker.initialize('eng+kor');
             const { data: { text } } = await worker.recognize(req.file.path);
             await worker.terminate();
 
@@ -50,7 +48,7 @@ export const receiptController = {
         }
     },
 
-    // 고정밀 OCR (PyTorch)
+    // 고정밀 OCR (EasyOCR + Tesseract)
     analyzeReceiptAdvanced: async (req, res) => {
         try {
             if (!req.file) {
@@ -63,9 +61,9 @@ export const receiptController = {
                 });
             }
 
-            logInfo(`Analyzing receipt image with PyTorch: ${req.file.filename}`);
+            logInfo(`Analyzing receipt image with Advanced OCR: ${req.file.filename}`);
 
-            // FastAPI 서버 호출
+            // FastAPI 서버 호출하여 텍스트 영역 감지
             const formData = new FormData();
             const fileBuffer = await fs.readFile(req.file.path);
             formData.append('file', fileBuffer, { filename: req.file.originalname });
@@ -80,21 +78,32 @@ export const receiptController = {
                 throw new Error(ocrResponse.data.error);
             }
 
-            const text = ocrResponse.data.text;
-            logInfo(`PyTorch OCR Result: ${text}`);
+            // Base64 이미지를 파일로 저장
+            const imageBuffer = Buffer.from(ocrResponse.data.image, 'base64');
+            await fs.writeFile(`${req.file.path}_regions.png`, imageBuffer);
+
+            // Tesseract로 텍스트 인식
+            const worker = await createWorker();
+            const { data: { text } } = await worker.recognize(`${req.file.path}_regions.png`, {
+                tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,$ '
+            });
+            await worker.terminate();
+
+            logInfo(`Advanced OCR Result: ${text}`);
 
             // GPT 분석 및 결과 반환
             const ingredients = await analyzeWithGPT(text);
 
-            // 임시 파일 삭제
+            // 임시 파일들 삭제
             await fs.unlink(req.file.path);
+            await fs.unlink(`${req.file.path}_regions.png`);
 
             return res.status(200).json({
                 success: true,
                 data: {
                     ingredients,
                     rawText: text,
-                    ocrType: 'pytorch'
+                    ocrType: 'advanced'
                 }
             });
 
@@ -134,6 +143,9 @@ async function handleError(error, req, res) {
     if (req.file) {
         try {
             await fs.unlink(req.file.path);
+            // 영역 이미지 파일이 있다면 삭제
+            const regionsPath = `${req.file.path}_regions.png`;
+            await fs.access(regionsPath).then(() => fs.unlink(regionsPath)).catch(() => {});
         } catch (unlinkError) {
             logError(`Failed to delete temporary file: ${unlinkError.message}`);
         }

@@ -2,7 +2,10 @@ from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from services.ocr_service import OCRService
 import uvicorn
-import base64
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = FastAPI()
 ocr_service = OCRService()
@@ -18,11 +21,22 @@ app.add_middleware(
 @app.post("/ocr")
 async def process_image(file: UploadFile = File(...)):
     try:
+        logger.info(f"Processing image: {file.filename}")
         contents = await file.read()
-        text = await ocr_service.process_image(contents)
-        return {"success": True, "text": text}
+        result = await ocr_service.process_image(contents)
+        
+        logger.info(f"Successfully processed image with {result['regions']} text regions")
+        return {
+            "success": True,
+            "image": result["image"],
+            "regions": result["regions"]
+        }
     except Exception as e:
-        return {"success": False, "error": str(e)}
+        logger.error(f"Error processing image: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e)
+        }
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=5001, reload=True)
