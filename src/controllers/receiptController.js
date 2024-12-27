@@ -1,7 +1,8 @@
-import { createWorker } from 'tesseract.js';
 import { logInfo, logError } from '../middlewares/logger.js';
 import fs from 'fs/promises';
 import openai from '../config/openai.js';
+import axios from 'axios';
+import FormData from 'form-data';
 
 export const receiptController = {
     analyzeReceipt: async (req, res) => {
@@ -18,14 +19,22 @@ export const receiptController = {
 
             logInfo(`Analyzing receipt image: ${req.file.filename}`);
 
-            // 1. OCR로 텍스트 추출
-            const worker = await createWorker();
-            await worker.loadLanguage('eng+kor');
-            await worker.initialize('eng+kor');
+            // 1. OCR로 텍스트 추출 (FastAPI 서버 호출)
+            const formData = new FormData();
+            const fileBuffer = await fs.readFile(req.file.path);
+            formData.append('file', fileBuffer, { filename: req.file.originalname });
 
-            logInfo('Starting OCR processing...');
-            const { data: { text } } = await worker.recognize(req.file.path);
-            await worker.terminate();
+            const ocrResponse = await axios.post('http://localhost:5001/ocr', formData, {
+                headers: {
+                    ...formData.getHeaders(),
+                }
+            });
+
+            if (!ocrResponse.data.success) {
+                throw new Error(ocrResponse.data.error);
+            }
+
+            const text = ocrResponse.data.text;
             logInfo(`OCR Result: ${text}`);
 
             // 2. GPT로 식재료 분석
@@ -53,12 +62,11 @@ export const receiptController = {
             // 3. 임시 파일 삭제
             await fs.unlink(req.file.path);
 
-            // 4. 결과 반환
             return res.status(200).json({
                 success: true,
                 data: {
                     ingredients,
-                    rawText: text  // 디버깅용
+                    rawText: text
                 }
             });
 
@@ -82,4 +90,4 @@ export const receiptController = {
             });
         }
     }
-}; 
+} 
