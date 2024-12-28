@@ -9,14 +9,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nampaca123/makeEat_backend.git"
+    "url": "git+https://github.com/nampaca123/makeEat.git"
   },
   "author": "Kyoungin Nam",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/nampaca123/makeEat_backend/issues"
+    "url": "https://github.com/nampaca123/makeEat.git"
   },
-  "homepage": "https://github.com/nampaca123/makeEat_backend#",
+  "homepage": "https://github.com/nampaca123/makeEat.git#",
   "dependencies": {
     "@prisma/client": "^6.1.0",
     "@tensorflow/tfjs-node": "^4.22.0",

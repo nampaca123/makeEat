@@ -220,8 +220,8 @@ MakeEat is a smart recipe generation system that creates personalized recipes ba
 
 ### 1. 프로젝트 클론 | Clone Project
 ```bash
-git clone https://github.com/nampaca123/makeEat_backend.git
-cd makeEat_backend
+git clone https://github.com/nampaca123/makeEat.git
+cd makeEat
 ```
 
 ### 2. 환경 변수 설정 | Environment Setup
