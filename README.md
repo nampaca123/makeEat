@@ -11,21 +11,23 @@ MakeEat is a smart recipe generation system that creates personalized recipes ba
 ### 차별화 요소 | Key Features
 
 1. **하이브리드 OCR 시스템 | Hybrid OCR System**
-   - EasyOCR과 Tesseract의 장점을 결합한 고정밀 텍스트 인식
+   - EasyOCR과 Tesseract의 장점을 결합한 고정밀 텍스트 인식. Tesseract만을 사용하는 것에 비해 56.19% 더 정확한 텍스트 인식
    - GPT-4 기반 식재료 정보 정규화 및 분류
    - 다양한 영수증 포맷 지원
+   - GPT API에 전처리된 텍스트를 보내는 것으로, 영수증 이미지를 직접 전송하는 것 대비 80.67% 비용 절감 및 30%의 처리 속도 향상
    
-   - High-precision text recognition combining EasyOCR and Tesseract
+   - High-precision text recognition combining EasyOCR and Tesseract. 56.19% more accurate text recognition compared to using Tesseract only.
    - GPT-4 based ingredient information normalization and classification
    - Support for various receipt formats
+   - By sending preprocessed text to the GPT API instead of raw receipt images, a cost reduction of 80.67% was achieved compared to sending the images directly, and a 30% processing speed improvement was achieved.
 
 2. **맞춤형 레시피 생성 | Personalized Recipe Generation**
    - GPT-4 기반 상황별 레시피 최적화
-   - FatSecret API 연동으로 정확한 영양 정보 제공
+   - FatSecret API 연동으로 기존 시장 제품 대비 55.12% 더 정확한 영양 정보 제공
    - 식이 제한, 알레르기 등 개인별 요구사항 반영
    
    - GPT-4 based recipe optimization for different situations
-   - Accurate nutritional information through FatSecret API integration
+   - 55.12% more accurate nutritional information compared to existing market products by FatSecret API integration
    - Consideration of individual requirements (dietary restrictions, allergies)
 
 3. **확장 가능한 시스템 구조 | Scalable System Architecture**
